@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFileIfPresent } from "@/lib/uploadClient";
+import { ThinkingIndicator } from "@/app/components/ThinkingIndicator";
 
 interface ReviseFormProps {
   submissionId: string;
@@ -68,7 +69,7 @@ export function ReviseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-navy/15 bg-white p-4">
+    <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-navy/15 bg-white p-5 shadow-md sm:p-6">
       <h3 className="font-serif text-lg text-navy">Revise &amp; Resubmit</h3>
 
       <div>
@@ -153,9 +154,9 @@ export function ReviseForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-sm bg-teal px-5 py-3 font-sans text-sm font-semibold uppercase tracking-wider text-white hover:bg-teal/90 disabled:opacity-50"
+        className="flex w-full items-center justify-center rounded-sm bg-teal px-5 py-3 font-sans text-sm font-semibold uppercase tracking-wider text-white hover:bg-teal/90 disabled:opacity-90"
       >
-        {submitting ? "Running AI review…" : "Resubmit for AI Review"}
+        {submitting ? <ThinkingIndicator /> : "Resubmit for AI Review"}
       </button>
     </form>
   );

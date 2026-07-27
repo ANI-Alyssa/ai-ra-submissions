@@ -45,8 +45,14 @@ RISK — classify overall risk of this request as "low", "medium", or "high" bas
 cost, and visibility of the decision (e.g. publishing something public-facing or spending money is
 higher risk than an internal doc approval).
 
-CONFIDENCE — 0-100, how confident you are that Alyssa has everything she needs. Low confidence
-should usually correlate with a lower overall score.
+CONFIDENCE — 0-100. This is NOT "how confident are you in your own scoring judgment" — you should
+always be confident in your judgment. It specifically means: how confident are you that ALYSSA HAS
+EVERYTHING SHE NEEDS to make this decision right now. A submission that is empty, placeholder text
+("test", "asdf", one word), or otherwise gives Alyssa nothing to work with must score confidence
+near 0 — being clear-eyed that the submission is bad IS low confidence that Alyssa has what she
+needs, not high confidence in your critique of it. Confidence should track closely with
+overallScore; a wide gap between them (e.g. overallScore 5 with confidence 90) is almost always a
+sign you've misread this field, not a real result — recheck it before answering.
 
 ESTIMATED REVIEW TIME — realistic seconds for Alyssa to read and decide, assuming the submission
 is in front of her as-is right now (not after fixes).

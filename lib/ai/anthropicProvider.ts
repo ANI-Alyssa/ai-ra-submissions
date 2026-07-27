@@ -45,8 +45,13 @@ export class AnthropicReviewProvider implements AIProvider {
     const organizationScore = Number(raw.organizationScore);
     const readabilityScore = Number(raw.readabilityScore);
     const overallScore = Number(raw.overallScore);
-    const confidence = Number(raw.confidence);
     const loomRequiredButMissing = Boolean(raw.loomRequiredButMissing);
+
+    // Confidence means "how confident that Alyssa has what she needs", which should never diverge
+    // far from overallScore — models sometimes misread it as "confidence in my own critique"
+    // instead (a submission that's obviously bad can score high on that reading). Clamped here as
+    // a safety net regardless of how well the prompt wording holds up over time.
+    const confidence = Math.min(Number(raw.confidence), Math.min(100, overallScore + 20));
 
     // The model proposes scores; the platform — not the model — owns the approval bar, so the
     // threshold stays configurable (env today, Admin Panel in a later phase) without a prompt edit.

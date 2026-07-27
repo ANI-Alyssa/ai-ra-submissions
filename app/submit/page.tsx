@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFileIfPresent } from "@/lib/uploadClient";
+import { ThinkingIndicator } from "@/app/components/ThinkingIndicator";
 
 const DEPARTMENTS = [
   "MARKETING",
@@ -72,7 +73,7 @@ export default function SubmitPage() {
   }
 
   return (
-    <div>
+    <div className="rounded-md border border-navy/10 bg-white p-8 shadow-lg sm:p-10">
       <p className="font-sans text-xs uppercase tracking-widest text-gold">New Submission</p>
       <h1 className="mt-1 font-serif text-3xl text-navy">Tell Alyssa what you need</h1>
       <p className="mt-2 text-sm text-slate-600">
@@ -148,9 +149,9 @@ export default function SubmitPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-sm bg-teal px-5 py-3 font-sans text-sm font-semibold uppercase tracking-wider text-white hover:bg-teal/90 disabled:opacity-50"
+          className="flex w-full items-center justify-center rounded-sm bg-teal px-5 py-3 font-sans text-sm font-semibold uppercase tracking-wider text-white hover:bg-teal/90 disabled:opacity-90"
         >
-          {submitting ? "Running AI review…" : "Submit for Review"}
+          {submitting ? <ThinkingIndicator /> : "Submit for Review"}
         </button>
       </form>
     </div>

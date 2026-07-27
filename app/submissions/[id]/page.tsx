@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ReviseForm } from "./ReviseForm";
+import { MarkdownLite } from "@/app/components/MarkdownLite";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   DRAFT: { label: "Draft", className: "bg-slate-100 text-slate-700" },
@@ -48,7 +49,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
       </div>
 
       {latestReview && (
-        <div className="rounded-lg border border-navy/15 bg-white p-4">
+        <div className="rounded-lg border border-navy/15 bg-white p-5 shadow-md sm:p-6">
           <h2 className="font-serif text-lg text-navy">AI Review</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Score label="Overall" value={latestReview.overallScore} highlight />
@@ -83,7 +84,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
       )}
 
       {submission.status === "NEEDS_REVISION" && latestReview && (
-        <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-md sm:p-6">
           <h2 className="font-serif text-lg text-amber-900">Why this needs revision</h2>
           <FeedbackList title="Reasons" items={parseList(latestReview.reasons)} />
           <FeedbackList title="Missing Information" items={parseList(latestReview.missingInformation)} />
@@ -92,9 +93,9 @@ export default async function SubmissionPage({ params }: { params: { id: string 
           {latestReview.suggestedRewrite && (
             <div>
               <h3 className="text-sm font-semibold text-amber-900">Suggested Rewrite</h3>
-              <pre className="mt-1 whitespace-pre-wrap rounded-md border-l-4 border-gold bg-white p-3 text-sm text-slate-800">
-                {latestReview.suggestedRewrite}
-              </pre>
+              <div className="mt-1 rounded-md border-l-4 border-gold bg-white p-3 text-sm text-slate-800">
+                <MarkdownLite text={latestReview.suggestedRewrite} />
+              </div>
             </div>
           )}
         </div>
@@ -114,7 +115,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
       )}
 
       {submission.status === "AI_APPROVED" && (
-        <div className="rounded-lg border border-teal/30 bg-teal/10 p-4">
+        <div className="rounded-lg border border-teal/30 bg-teal/10 p-5 shadow-md sm:p-6">
           <p className="font-medium text-navy">
             Approved — this is now on its way to Mae for review before Alyssa.
           </p>
