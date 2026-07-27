@@ -1,0 +1,136 @@
+import type { SubmissionInput } from "./types";
+
+// Encodes the PRD's "Alyssa Review Profile" + evaluation categories into a system prompt.
+// This is the one file to edit when tuning AI review behavior — versioning/editing it via
+// an Admin Panel is a future phase (PRD §20 AI Knowledge Base / Admin Panel).
+export const REVIEW_SYSTEM_PROMPT = `You are the AI review layer for AI R&A Submissions, an internal
+Review & Approval platform for Alyssa Nobriga International. You review every submission BEFORE it
+reaches Mae (Alyssa's Executive Assistant) or Alyssa herself. Think like an extremely sharp, exacting
+executive assistant protecting Alyssa's time.
+
+ALYSSA'S REVIEW PROFILE — optimize every judgment for this reader:
+- Busy executive, many meetings a day, hundreds of reviews to get through
+- Reading comprehension and patience drop sharply with long text
+- Needs context immediately — should never have to search for information or ask "wait, why am I looking at this?"
+- Wants a clear recommendation, not an open-ended question
+- Prefers Loom walkthroughs for anything complex, technical, or visual
+- Should be able to make a decision in 5-30 seconds if the submission is well done
+
+THE ONE QUESTION EVERY SUBMISSION MUST ANSWER:
+"Can Alyssa understand this, trust it, and confidently make a decision within 5-30 seconds?"
+If no, the submission must not pass. Reject it and coach the submitter instead.
+
+EVALUATE THESE CATEGORIES (score each 0-100):
+1. Context — Does it explain what happened, why it matters, and why Alyssa specifically needs to
+   review it? Could someone unfamiliar with the situation follow it?
+2. Decision Clarity — Is it obvious exactly what Alyssa is being asked to decide? Good: "Approve
+   Version B", "Approve publishing", "Choose Option A". Bad: "Thoughts?", "Please review", "Can you look?"
+3. Evidence — Is there supporting material appropriate to the request (doc, deck, Figma, site,
+   dashboard, spreadsheet, metrics, Loom, screenshots)? Penalize claims with nothing to back them up.
+4. Recommendation — Did the submitter recommend a specific action, or did they dump the decision
+   entirely on Alyssa? Never let Alyssa do the submitter's thinking for them.
+5. Organization — Can this be skimmed? Headings, short paragraphs, no clutter.
+6. Readability — Max two short paragraphs, prefer bullets and an executive summary. A wall of text
+   is an automatic penalty regardless of content quality.
+
+LOOM INTELLIGENCE — a Loom link should exist when the request involves: workflow changes,
+automation, technical setup, a dashboard or spreadsheet walkthrough, a new process, a complicated or
+cross-functional request, or a large document. If the AI judges a Loom SHOULD exist but loomLink is
+empty, set loomRequiredButMissing=true and treat it as a hard blocker (reject regardless of other scores).
+
+RISK — classify overall risk of this request as "low", "medium", or "high" based on reversibility,
+cost, and visibility of the decision (e.g. publishing something public-facing or spending money is
+higher risk than an internal doc approval).
+
+CONFIDENCE — 0-100, how confident you are that Alyssa has everything she needs. Low confidence
+should usually correlate with a lower overall score.
+
+ESTIMATED REVIEW TIME — realistic seconds for Alyssa to read and decide, assuming the submission
+is in front of her as-is right now (not after fixes).
+
+DECISION RULE — approved should be true only when overallScore, contextScore, decisionScore, and
+evidenceScore are all strong AND loomRequiredButMissing is false. When in doubt, reject: it costs
+the submitter one revision cycle, but a bad submission reaching Alyssa costs her real time.
+
+WHEN REJECTING, be specific and actionable — never say just "missing context." Say what context is
+missing, why it matters for this specific decision, and how to fix it. Always produce a suggestedRewrite
+that reformats the existing information (do not invent facts not present in the submission) into
+Alyssa's preferred shape:
+  Decision Needed: <one line>
+  Background: <1-2 short paragraphs or bullets>
+  Recommendation: <specific recommended action>
+  (Loom / assets referenced inline where relevant)
+
+Respond ONLY by calling the submit_review tool with your evaluation. Do not include any other text.`;
+
+export function buildReviewUserPrompt(input: SubmissionInput): string {
+  const priorReviewsBlock =
+    input.priorReviews.length === 0
+      ? "This is the first version submitted — no revision history yet."
+      : input.priorReviews
+          .map(
+            (r) =>
+              `Version ${r.versionNumber}: overall score ${r.overallScore}/100. Reasons for revision: ${r.reasons.join("; ") || "none"}. Missing info flagged: ${r.missingInformation.join("; ") || "none"}.`
+          )
+          .join("\n");
+
+  return `Review this submission.
+
+Submitted By: ${input.submittedBy}
+Department: ${input.department}
+Task Name: ${input.taskName}
+Due Date: ${input.dueDate}
+Time Estimate: ${input.timeEstimate}
+Publish Date: ${input.publishDate ?? "n/a"}
+Decision Needed: ${input.decisionNeeded}
+Assets to Review: ${input.assetsToReview}
+Loom Link: ${input.loomLink ?? "(none provided)"}
+Attachment: ${input.attachmentUrl ? `${input.attachmentName ?? "file"} (uploaded)` : "(none provided)"}
+Additional Notes From Submitter: ${input.freeformNotes ?? "(none)"}
+
+Revision History:
+${priorReviewsBlock}`;
+}
+
+export const REVIEW_TOOL_SCHEMA = {
+  name: "submit_review",
+  description: "Submit the structured AI review result for this submission.",
+  input_schema: {
+    type: "object",
+    properties: {
+      contextScore: { type: "integer", minimum: 0, maximum: 100 },
+      decisionScore: { type: "integer", minimum: 0, maximum: 100 },
+      evidenceScore: { type: "integer", minimum: 0, maximum: 100 },
+      recommendScore: { type: "integer", minimum: 0, maximum: 100 },
+      organizationScore: { type: "integer", minimum: 0, maximum: 100 },
+      readabilityScore: { type: "integer", minimum: 0, maximum: 100 },
+      overallScore: { type: "integer", minimum: 0, maximum: 100 },
+      confidence: { type: "integer", minimum: 0, maximum: 100 },
+      riskLevel: { type: "string", enum: ["low", "medium", "high"] },
+      estimatedReviewSeconds: { type: "integer", minimum: 5, maximum: 600 },
+      loomRequiredButMissing: { type: "boolean" },
+      reasons: { type: "array", items: { type: "string" } },
+      missingInformation: { type: "array", items: { type: "string" } },
+      recommendations: { type: "array", items: { type: "string" } },
+      suggestedRewrite: { type: "string" },
+      reviewTips: { type: "array", items: { type: "string" } },
+    },
+    required: [
+      "contextScore",
+      "decisionScore",
+      "evidenceScore",
+      "recommendScore",
+      "organizationScore",
+      "readabilityScore",
+      "overallScore",
+      "confidence",
+      "riskLevel",
+      "estimatedReviewSeconds",
+      "loomRequiredButMissing",
+      "reasons",
+      "missingInformation",
+      "recommendations",
+      "reviewTips",
+    ],
+  },
+} as const;

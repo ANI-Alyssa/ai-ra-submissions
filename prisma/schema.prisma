@@ -1,0 +1,99 @@
+// AI R&A Submissions — MVP data model.
+// Covers the core loop: submission -> AI review -> revision -> ClickUp handoff.
+// Mae/Alyssa dashboards, learning system aggregates, and admin config are future phases
+// (see README "Roadmap") and will extend this schema rather than replace it.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite has no native enum support, so Department/status are validated strings — the allowed
+// values live in lib/validation.ts (DEPARTMENTS) and lib/ai/types.ts (SubmissionStatus values:
+// DRAFT | AI_REVIEWING | NEEDS_REVISION | AI_APPROVED | CLICKUP_FAILED). Switching to Postgres in
+// production can reintroduce real `enum` blocks here without other code changes.
+
+model Submission {
+  id             String            @id @default(cuid())
+  submittedBy    String
+  taskName       String
+  dueDate        DateTime
+  timeEstimate   String
+  assetsToReview String
+  decisionNeeded String
+  publishDate    DateTime?
+  department     String
+  loomLink       String?
+  attachmentUrl  String? // local "/uploads/<uuid>.<ext>" path (see lib/upload.ts)
+  attachmentName String? // original filename, for display
+
+  status         String            @default("DRAFT")
+  currentVersion Int               @default(1)
+
+  clickupTaskId  String?
+  clickupTaskUrl String?
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  versions       SubmissionVersion[]
+  reviews        AIReview[]
+}
+
+// One row per submit/revise cycle — preserves full revision history for learning data later.
+model SubmissionVersion {
+  id             String     @id @default(cuid())
+  submission     Submission @relation(fields: [submissionId], references: [id])
+  submissionId   String
+  versionNumber  Int
+
+  taskName       String
+  assetsToReview String
+  decisionNeeded String
+  loomLink       String?
+  attachmentUrl  String?
+  attachmentName String?
+  freeformNotes  String? // additional background the submitter typed in for this version
+
+  createdAt      DateTime   @default(now())
+
+  reviews        AIReview[]
+}
+
+model AIReview {
+  id           String     @id @default(cuid())
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  submissionId String
+  version      SubmissionVersion @relation(fields: [versionId], references: [id])
+  versionId    String
+
+  // Scores, 0-100
+  contextScore     Int
+  decisionScore    Int
+  evidenceScore    Int
+  recommendScore   Int
+  organizationScore Int
+  readabilityScore Int
+  overallScore     Int
+  confidence       Int // 0-100
+
+  riskLevel        String // "low" | "medium" | "high"
+  estimatedReviewSeconds Int
+
+  approved         Boolean
+
+  reasons             String // JSON string[]
+  missingInformation  String // JSON string[]
+  recommendations     String // JSON string[]
+  suggestedRewrite    String? // markdown
+  reviewTips          String // JSON string[]
+  loomRequiredButMissing Boolean @default(false)
+
+  rawModelResponse String? // full JSON from the model, for auditing/debugging
+
+  createdAt DateTime @default(now())
+}
