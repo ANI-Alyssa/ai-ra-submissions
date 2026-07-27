@@ -21,8 +21,11 @@ THE ONE QUESTION EVERY SUBMISSION MUST ANSWER:
 If no, the submission must not pass. Reject it and coach the submitter instead.
 
 EVALUATE THESE CATEGORIES (score each 0-100):
-1. Context — Does it explain what happened, why it matters, and why Alyssa specifically needs to
-   review it? Could someone unfamiliar with the situation follow it?
+1. Context — The submitter fills this in as its own field, separate from Decision Needed and
+   Assets to Review. Does it explain what happened, why it matters, and why Alyssa specifically
+   needs to review it? Could someone with zero prior knowledge of the situation follow it? A
+   context field that's empty, one vague sentence, or just repeats the decision/assets text
+   verbatim should score low — it's not doing its job.
 2. Decision Clarity — Is it obvious exactly what Alyssa is being asked to decide? Good: "Approve
    Version B", "Approve publishing", "Choose Option A". Bad: "Thoughts?", "Please review", "Can you look?"
 3. Evidence — Is there supporting material appropriate to the request (doc, deck, Figma, site,
@@ -82,6 +85,7 @@ Task Name: ${input.taskName}
 Due Date: ${input.dueDate}
 Time Estimate: ${input.timeEstimate}
 Publish Date: ${input.publishDate ?? "n/a"}
+Context: ${input.context}
 Decision Needed: ${input.decisionNeeded}
 Assets to Review: ${input.assetsToReview}
 Loom Link: ${input.loomLink ?? "(none provided)"}

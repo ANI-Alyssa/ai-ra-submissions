@@ -44,6 +44,7 @@ export default function SubmitPage() {
         taskName: form.get("taskName"),
         dueDate: form.get("dueDate"),
         timeEstimate: form.get("timeEstimate"),
+        context: form.get("context"),
         assetsToReview: form.get("assetsToReview"),
         decisionNeeded: form.get("decisionNeeded"),
         publishDate: form.get("publishDate"),
@@ -102,6 +103,13 @@ export default function SubmitPage() {
             ))}
           </select>
         </div>
+
+        <TextArea
+          label="Context"
+          name="context"
+          required
+          placeholder="What happened? Why does it matter? Why does Alyssa specifically need to review this?"
+        />
 
         <TextArea
           label="Decision Needed"

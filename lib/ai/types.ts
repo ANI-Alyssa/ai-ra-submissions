@@ -12,6 +12,8 @@ export interface SubmissionInput {
   taskName: string;
   dueDate: string;
   timeEstimate: string;
+  /** What happened / why it matters / why Alyssa specifically needs to review it. */
+  context: string;
   assetsToReview: string;
   decisionNeeded: string;
   publishDate: string | null;

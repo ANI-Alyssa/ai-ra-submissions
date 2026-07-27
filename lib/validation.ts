@@ -17,6 +17,7 @@ export const submissionInputSchema = z.object({
   taskName: z.string().min(1, "Required"),
   dueDate: z.string().min(1, "Required"),
   timeEstimate: z.string().min(1, "Required"),
+  context: z.string().min(1, "Required"),
   assetsToReview: z.string().min(1, "Required"),
   decisionNeeded: z.string().min(1, "Required"),
   publishDate: z.preprocess(emptyToNull, z.string().nullable()),
@@ -33,6 +34,7 @@ export type SubmissionFormData = z.infer<typeof submissionInputSchema>;
 
 export const reviseInputSchema = submissionInputSchema.pick({
   taskName: true,
+  context: true,
   assetsToReview: true,
   decisionNeeded: true,
   loomLink: true,

@@ -104,6 +104,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         <ReviseForm
           submissionId={submission.id}
           initialTaskName={submission.taskName}
+          initialContext={submission.context}
           initialAssetsToReview={submission.assetsToReview}
           initialDecisionNeeded={submission.decisionNeeded}
           initialLoomLink={submission.loomLink}

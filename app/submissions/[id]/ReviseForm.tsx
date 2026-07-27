@@ -7,6 +7,7 @@ import { uploadFileIfPresent } from "@/lib/uploadClient";
 interface ReviseFormProps {
   submissionId: string;
   initialTaskName: string;
+  initialContext: string;
   initialAssetsToReview: string;
   initialDecisionNeeded: string;
   initialLoomLink: string | null;
@@ -17,6 +18,7 @@ interface ReviseFormProps {
 export function ReviseForm({
   submissionId,
   initialTaskName,
+  initialContext,
   initialAssetsToReview,
   initialDecisionNeeded,
   initialLoomLink,
@@ -39,6 +41,7 @@ export function ReviseForm({
 
       const payload = {
         taskName: form.get("taskName"),
+        context: form.get("context"),
         assetsToReview: form.get("assetsToReview"),
         decisionNeeded: form.get("decisionNeeded"),
         loomLink: form.get("loomLink"),
@@ -74,6 +77,17 @@ export function ReviseForm({
           name="taskName"
           defaultValue={initialTaskName}
           required
+          className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-navy">Context</label>
+        <textarea
+          name="context"
+          defaultValue={initialContext}
+          required
+          rows={2}
           className="mt-1 w-full rounded-md border border-navy/20 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
         />
       </div>

@@ -44,12 +44,12 @@ export async function createClickUpTask(
     string
   >;
 
-  // Only fields whose ClickUp type is a plain string/number/date are safe to send generically —
-  // "ANI Department" and "Department" are drop_downs (need an option UUID, not the label text)
-  // and "Submitted By" is a users field (needs a ClickUp user ID, not free text); mapping those
-  // correctly would need option-ID/user-ID lookups this app doesn't do, so they're left out of
-  // custom_fields and covered via the description instead (see buildTaskDescription).
+  // Text/number/date fields are safe to send generically as {id, value}. "ANI Department" is a
+  // drop_down — it needs the option's UUID, not the label text — so it's resolved separately via
+  // resolveDepartmentField(). "Submitted By" is left description-only: it's a users field (needs
+  // a ClickUp user ID), and submitters don't necessarily have their own ClickUp account.
   const customFields = Object.entries({
+    Context: input.context,
     "Decision Needed": input.decisionNeeded,
     "Assets to Review": input.assetsToReview,
     "Publish Date": input.publishDate ? new Date(input.publishDate).getTime() : null,
@@ -59,6 +59,9 @@ export async function createClickUpTask(
   })
     .filter(([name, value]) => customFieldMap[name] && value !== null && value !== undefined)
     .map(([name, value]) => ({ id: customFieldMap[name], value }));
+
+  const departmentField = resolveDepartmentField(input.department);
+  if (departmentField) customFields.push(departmentField);
 
   const description = buildTaskDescription(input, review);
   const timeEstimateMs = parseTimeEstimateToMs(input.timeEstimate);
@@ -71,7 +74,9 @@ export async function createClickUpTask(
     },
     body: JSON.stringify({
       name: input.taskName,
-      description,
+      // ClickUp's plain "description" field renders markdown syntax as literal asterisks —
+      // "markdown_description" is the field that actually gets parsed into rich text/bold.
+      markdown_description: description,
       status: "submissions",
       assignees: assigneeId ? [Number(assigneeId)] : undefined,
       start_date: Date.now(),
@@ -90,6 +95,23 @@ export async function createClickUpTask(
 
   const data = (await response.json()) as ClickUpCreateTaskResponse;
   return { dryRun: false, taskId: data.id, taskUrl: data.url };
+}
+
+// Resolves our department enum to the "🏢 ANI Department" drop_down's option UUID on the real
+// "Mae Submissions" list. Both the field ID and the option-ID map are workspace-specific (list
+// 901703878273), configured via env rather than hardcoded so they survive a list rebuild.
+function resolveDepartmentField(department: SubmissionInput["department"]): { id: string; value: string } | null {
+  const fieldId = process.env.CLICKUP_DEPARTMENT_FIELD_ID;
+  if (!fieldId) return null;
+
+  const optionMap = JSON.parse(process.env.CLICKUP_DEPARTMENT_OPTIONS || "{}") as Record<
+    string,
+    string
+  >;
+  const optionId = optionMap[department];
+  if (!optionId) return null;
+
+  return { id: fieldId, value: optionId };
 }
 
 // Uploaded attachments are stored as local "/uploads/..." paths (see lib/upload.ts) — they need
@@ -111,6 +133,9 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
   return [
     `🧑 **Submitted By:**`,
     input.submittedBy,
+    "",
+    `📋 **Context:**`,
+    input.context,
     "",
     `🤖 **Decision Needed:**`,
     input.decisionNeeded,
