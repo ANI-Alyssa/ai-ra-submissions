@@ -12,3 +12,6 @@ public/uploads/*
 .DS_Store
 npm-debug.log*
 *.tsbuildinfo
+
+.vercel
+.env*
