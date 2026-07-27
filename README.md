@@ -16,21 +16,22 @@ Approved → ClickUp task auto-created, assigned to Mae, status "Submission"
 ## Stack
 
 - Next.js 14 (App Router) + TypeScript
-- Prisma + SQLite for local dev (swap `DATABASE_URL` to a Postgres connection string for production —
-  no schema changes needed, just change the `datasource` provider in `prisma/schema.prisma`)
+- Prisma + Postgres (Vercel Postgres, Neon, Supabase — any standard Postgres connection string)
 - Tailwind CSS
 - Anthropic Claude for the AI review engine, behind a provider interface (`lib/ai/types.ts`) so
   OpenAI/Gemini can be added later without touching review logic
 - ClickUp REST API v2 for task creation
+- Vercel Blob for attachment storage (falls back to local disk in dev — see Attachments below)
 - Brand styling (colors/fonts) sampled directly from alyssanobriga.com: navy (`#051C46`) Playfair
   Display headings, gold (`#B6A28C`) accents, teal (`#0ABAB5`) CTAs, Montserrat body/button text
 
-## Setup
+## Setup (local dev)
 
 ```bash
 npm install
 cp .env.example .env
-# fill in ANTHROPIC_API_KEY at minimum — ClickUp vars can stay blank (dry-run mode)
+# fill in DATABASE_URL (a Postgres connection string) and ANTHROPIC_API_KEY at minimum —
+# ClickUp/Blob/Sheets vars can stay blank (dry-run / local-disk fallback)
 npx prisma migrate dev --name init
 npm run dev
 ```
@@ -38,6 +39,10 @@ npm run dev
 Visit `http://localhost:3000`, click **New Submission**, fill out the form, submit. The AI review
 runs synchronously and you'll land on the submission's status page showing scores and, if
 rejected, specific feedback plus a revise-and-resubmit form.
+
+Local dev needs *some* Postgres to point `DATABASE_URL` at (Vercel Postgres/Neon both have a free
+tier and work fine for this) — SQLite was dropped once this became a real deployed app rather than
+a local-only prototype.
 
 ### Dry-run mode
 
@@ -47,12 +52,36 @@ credentials and custom fields are provisioned.
 
 ### Attachments
 
-The Attachment field is a real file upload, not a URL — files are saved to `public/uploads/`
-(`lib/upload.ts`) and served back at `/uploads/<file>`. This is local disk storage, fine for
-single-machine dev/testing; once this app is actually deployed, swap `saveUploadedFile()` for real
-object storage (S3/Supabase/etc.) so uploads survive redeploys and are reachable from outside
-localhost — nothing else in the upload flow needs to change. Set `APP_BASE_URL` once deployed so
-ClickUp task descriptions link to a real, externally-reachable URL instead of a relative path.
+The Attachment field is a real file upload, not a URL. `lib/upload.ts` uses Vercel Blob storage
+whenever `BLOB_READ_WRITE_TOKEN` is set (auto-injected by Vercel once Blob storage is attached to
+the project — nothing to configure by hand in production), and falls back to writing
+`public/uploads/` on local disk otherwise, so local dev needs no Blob credentials at all. Set
+`APP_BASE_URL` once deployed so ClickUp task descriptions link to a real, externally-reachable URL
+instead of a relative path (Blob URLs are already absolute, so this only matters for local-disk
+uploads).
+
+## Deploying to Vercel
+
+1. **Import the repo**: on [vercel.com](https://vercel.com), New Project → import
+   `ANI-Alyssa/ai-ra-submissions` from GitHub. Framework preset (Next.js) is auto-detected.
+2. **Add Postgres**: in the new project, go to Storage → Create Database → Postgres (or connect
+   an existing Neon/Supabase database). Vercel sets `DATABASE_URL` automatically for you when using
+   its own Postgres; otherwise paste your connection string into the project's Environment
+   Variables settings.
+3. **Add Blob storage**: Storage → Create → Blob. This auto-injects `BLOB_READ_WRITE_TOKEN` — no
+   copy-pasting needed.
+4. **Set the remaining env vars** (Project Settings → Environment Variables) — everything in
+   `.env.example` except `DATABASE_URL`/`BLOB_READ_WRITE_TOKEN` (handled by the steps above):
+   `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_APPROVAL_THRESHOLD`, `APP_BASE_URL` (your Vercel deployment
+   URL, e.g. `https://ai-ra-submissions.vercel.app`), `CLICKUP_API_TOKEN`, `CLICKUP_LIST_ID`,
+   `CLICKUP_MAE_ASSIGNEE_ID`, `CLICKUP_CUSTOM_FIELD_MAP`, `CLICKUP_DEPARTMENT_FIELD_ID`,
+   `CLICKUP_DEPARTMENT_OPTIONS`, and (if using the Google Sheets sync) `GOOGLE_SHEETS_WEBHOOK_URL`
+   / `GOOGLE_SHEETS_SHARED_SECRET`.
+5. **Run the first migration against the new database**: once `DATABASE_URL` is set, run
+   `npx prisma migrate deploy` locally with that same `DATABASE_URL` in your environment (or via
+   `vercel env pull` to grab it), to create the tables before the first real deploy hits them.
+6. **Deploy**. The `postinstall` script (`prisma generate`) runs automatically on every Vercel
+   build — no extra build configuration needed.
 
 ## What's implemented (MVP)
 
@@ -64,8 +93,11 @@ ClickUp task descriptions link to a real, externally-reachable URL instead of a 
 - Actionable rejection feedback: reasons, missing information, recommendations, suggested
   rewrite in Alyssa's preferred format, review tips (§11–12)
 - Full revision history stored per submission (`SubmissionVersion` + `AIReview` per version)
-- Auto ClickUp task creation on approval, assigned to Mae, status "Submission", with AI summary/
-  score/confidence in the task description (§13)
+- Auto ClickUp task creation on approval into the real "Mae Submissions" list, assigned to Mae,
+  status `submissions`, with Context/Decision Needed/Assets to Review/Publish Date/ANI Department
+  populated as real ClickUp custom fields (not just description text) (§13)
+- Optional sync of approved submissions into Alyssa's existing "Tasks + Approvals" Google Sheet,
+  via an Apps Script webhook (non-fatal — a Sheets hiccup never blocks an approval)
 
 ## Not yet implemented (see PRD for full spec)
 
@@ -97,9 +129,11 @@ lib/
     anthropicProvider.ts      Claude implementation (tool-forced structured output)
     reviewEngine.ts           provider factory (AI_PROVIDER env var)
   clickup/client.ts           ClickUp task creation, dry-run fallback
-  submissionService.ts        create/revise orchestration: DB + AI + ClickUp
-  upload.ts                   local file storage for attachments
+  googleSheets/client.ts      "Tasks + Approvals" sheet sync via Apps Script webhook, non-fatal
+  submissionService.ts        create/revise orchestration: DB + AI + ClickUp + Sheets
+  upload.ts                   Vercel Blob storage, local-disk fallback for dev
   uploadClient.ts             browser-side helper that posts to /api/uploads
   validation.ts                zod schemas for form input
 prisma/schema.prisma          Submission, SubmissionVersion, AIReview models
+google-apps-script/Code.gs    paste into the Sheet's Apps Script editor, deploy as Web App
 ```

@@ -4,7 +4,7 @@
 // (see README "Roadmap") and will extend this schema rather than replace it.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -12,10 +12,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// SQLite has no native enum support, so Department/status are validated strings — the allowed
-// values live in lib/validation.ts (DEPARTMENTS) and lib/ai/types.ts (SubmissionStatus values:
-// DRAFT | AI_REVIEWING | NEEDS_REVISION | AI_APPROVED | CLICKUP_FAILED). Switching to Postgres in
-// production can reintroduce real `enum` blocks here without other code changes.
+// Department/status are validated strings rather than Prisma `enum` blocks — the allowed values
+// live in lib/validation.ts (DEPARTMENTS) and lib/ai/types.ts (SubmissionStatus values: DRAFT |
+// AI_REVIEWING | NEEDS_REVISION | AI_APPROVED | CLICKUP_FAILED). Kept as strings even on Postgres
+// so adding a department/status doesn't require a schema migration, just a code change.
 
 model Submission {
   id             String            @id @default(cuid())
@@ -23,6 +23,7 @@ model Submission {
   taskName       String
   dueDate        DateTime
   timeEstimate   String
+  context        String            @default("") // what happened / why it matters / why Alyssa needs this
   assetsToReview String
   decisionNeeded String
   publishDate    DateTime?
@@ -52,6 +53,7 @@ model SubmissionVersion {
   versionNumber  Int
 
   taskName       String
+  context        String            @default("")
   assetsToReview String
   decisionNeeded String
   loomLink       String?
