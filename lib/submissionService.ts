@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { getAIProvider } from "./ai/reviewEngine";
 import { createClickUpTask } from "./clickup/client";
+import { pushToTasksSheet } from "./googleSheets/client";
 import type { SubmissionInput } from "./ai/types";
 import type { SubmissionFormData, ReviseFormData } from "./validation";
 
@@ -14,6 +15,7 @@ function toSubmissionInput(
   },
   version: {
     taskName: string;
+    context: string;
     assetsToReview: string;
     decisionNeeded: string;
     loomLink: string | null;
@@ -30,6 +32,7 @@ function toSubmissionInput(
     timeEstimate: base.timeEstimate,
     publishDate: base.publishDate ? base.publishDate.toISOString() : null,
     taskName: version.taskName,
+    context: version.context,
     assetsToReview: version.assetsToReview,
     decisionNeeded: version.decisionNeeded,
     loomLink: version.loomLink,
@@ -91,6 +94,15 @@ async function runReviewAndMaybeCreateTask(
         clickupTaskUrl: clickupResult.taskUrl,
       },
     });
+
+    // Supplementary mirror into the existing "Tasks + Approvals" Google Sheet — deliberately
+    // isolated in its own try/catch so a Sheets hiccup never flips an already-approved,
+    // already-in-ClickUp submission to a failed state.
+    try {
+      await pushToTasksSheet(aiInput, result, clickupResult.taskUrl);
+    } catch (sheetsErr) {
+      console.warn("Google Sheets sync failed (non-fatal):", sheetsErr);
+    }
   } catch (err) {
     await prisma.submission.update({
       where: { id: submissionId },
@@ -107,6 +119,7 @@ export async function createSubmission(data: SubmissionFormData) {
       taskName: data.taskName,
       dueDate: new Date(data.dueDate),
       timeEstimate: data.timeEstimate,
+      context: data.context,
       assetsToReview: data.assetsToReview,
       decisionNeeded: data.decisionNeeded,
       publishDate: data.publishDate ? new Date(data.publishDate) : null,
@@ -120,6 +133,7 @@ export async function createSubmission(data: SubmissionFormData) {
         create: {
           versionNumber: 1,
           taskName: data.taskName,
+          context: data.context,
           assetsToReview: data.assetsToReview,
           decisionNeeded: data.decisionNeeded,
           loomLink: data.loomLink,
@@ -158,6 +172,7 @@ export async function reviseSubmission(submissionId: string, data: ReviseFormDat
       submissionId,
       versionNumber: nextVersionNumber,
       taskName: data.taskName,
+      context: data.context,
       assetsToReview: data.assetsToReview,
       decisionNeeded: data.decisionNeeded,
       loomLink: data.loomLink,
@@ -171,6 +186,7 @@ export async function reviseSubmission(submissionId: string, data: ReviseFormDat
     where: { id: submissionId },
     data: {
       taskName: data.taskName,
+      context: data.context,
       assetsToReview: data.assetsToReview,
       decisionNeeded: data.decisionNeeded,
       loomLink: data.loomLink,
