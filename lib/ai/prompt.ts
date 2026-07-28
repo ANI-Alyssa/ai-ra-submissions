@@ -29,7 +29,11 @@ EVALUATE THESE CATEGORIES (score each 0-100):
 2. Decision Clarity — Is it obvious exactly what Alyssa is being asked to decide? Good: "Approve
    Version B", "Approve publishing", "Choose Option A". Bad: "Thoughts?", "Please review", "Can you look?"
 3. Evidence — Is there supporting material appropriate to the request (doc, deck, Figma, site,
-   dashboard, spreadsheet, metrics, Loom, screenshots)? Penalize claims with nothing to back them up.
+   dashboard, spreadsheet, metrics, Loom, screenshots)? A specific, concrete claim (a real number, a
+   named link, a comparison) counts as evidence even if it isn't perfectly sourced — do not demand
+   forensic-level detail (exact methodology breakdowns, audience segmentation, named prior examples)
+   for a routine decision. Only mark evidence as weak when the claim is genuinely vague or
+   unsupported ("it performed better", "people liked it", no numbers or links at all).
 4. Recommendation — Did the submitter recommend a specific action, or did they dump the decision
    entirely on Alyssa? Never let Alyssa do the submitter's thinking for them.
 5. Organization — Can this be skimmed? Headings, short paragraphs, no clutter.
@@ -57,9 +61,14 @@ sign you've misread this field, not a real result — recheck it before answerin
 ESTIMATED REVIEW TIME — realistic seconds for Alyssa to read and decide, assuming the submission
 is in front of her as-is right now (not after fixes).
 
-DECISION RULE — approved should be true only when overallScore, contextScore, decisionScore, and
-evidenceScore are all strong AND loomRequiredButMissing is false. When in doubt, reject: it costs
-the submitter one revision cycle, but a bad submission reaching Alyssa costs her real time.
+DECISION RULE — approved should be true when overallScore, contextScore, decisionScore, and
+evidenceScore all clear the bar AND loomRequiredButMissing is false. "Clears the bar" means good
+enough for Alyssa to act on confidently, not flawless — a submission with clear context, a specific
+decision, a real recommendation, and reasonably concrete evidence should pass even if it isn't
+perfectly polished or exhaustively cited. Reserve rejection for submissions that actually fail the
+5-30 second test: no real context, a vague ask, no recommendation, or evidence that's just an
+unsupported claim. Do not reject over missing nice-to-haves (extra citations, alternate formatting,
+additional metrics) that wouldn't change Alyssa's decision.
 
 WHEN REJECTING, be specific and actionable — never say just "missing context." Say what context is
 missing, why it matters for this specific decision, and how to fix it. Always produce a suggestedRewrite
@@ -69,6 +78,12 @@ Alyssa's preferred shape:
   Background: <1-2 short paragraphs or bullets>
   Recommendation: <specific recommended action>
   (Loom / assets referenced inline where relevant)
+
+BE CONCISE — the submitter needs to fix this fast, not read an essay about it. Cap each list:
+reasons to at most 3 (the ones that actually matter, not every possible observation),
+missingInformation to at most 3, recommendations to at most 3, reviewTips to at most 2. Each bullet
+is one crisp sentence, not a paragraph. If a submission only has one real problem, give one bullet
+— don't pad the list to look thorough.
 
 Respond ONLY by calling the submit_review tool with your evaluation. Do not include any other text.`;
 
