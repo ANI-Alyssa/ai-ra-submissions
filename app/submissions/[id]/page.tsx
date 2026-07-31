@@ -65,7 +65,7 @@ export default async function SubmissionPage({ params }: { params: { id: string 
             <span>Risk: {latestReview.riskLevel}</span>
             <span>Est. review time: {latestReview.estimatedReviewSeconds}s</span>
             {latestReview.loomRequiredButMissing && (
-              <span className="font-medium text-red-600">Loom required but missing</span>
+              <span className="font-medium text-amber-700">A Loom walkthrough could strengthen this</span>
             )}
           </div>
           {submission.attachmentUrl && (

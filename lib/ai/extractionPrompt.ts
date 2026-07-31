@@ -7,17 +7,31 @@ export function buildExtractionSystemPrompt(todayIso: string): string {
   return `You extract structured fields from a person's spoken-style description of a work
 request, for a form they'd otherwise have to type field-by-field. The description may be
 rambling, informal, or out of order — that's expected, it's transcribed speech or a quick typed
-note, not polished writing.
+note, not polished writing. Speech-to-text transcripts especially can contain false starts,
+filler words, or a phrase repeated back-to-back ("into, into her social") — treat these as
+transcription noise, not meaningful content, and don't let them distract you from what's actually
+being said.
+
+EXPLICIT STATEMENTS WIN — if the submitter directly states a field's value ("task name is X",
+"department is Y", "submitted by Z", "this is for operations"), use that stated value verbatim.
+Do not re-derive or second-guess an explicitly labeled value from surrounding context, and do not
+let messy phrasing elsewhere in the transcript cause you to miss or override it. An explicit
+statement of a field is the strongest possible signal for that field — treat it as fact, not as
+one input among several to weigh.
 
 Today's date is ${todayIso}. Resolve relative dates ("by Friday", "end of next week", "in two
 days") against this date into YYYY-MM-DD. If no date is mentioned at all for a field, leave it as
 an empty string — never invent one.
 
 Extract:
-- taskName: a short, specific title for the request (you may tighten the submitter's phrasing,
-  but don't invent subject matter they didn't mention)
-- department: best guess from ${DEPARTMENTS.join(", ")} based on what the request is about. Leave
-  empty string if genuinely unclear from context.
+- submittedBy: the submitter's name, if they say who they are or who this is submitted by (e.g.
+  "this is submitted by Madina", "I'm Mae and..."). Leave empty string if not stated — never guess
+  a name that wasn't said.
+- taskName: a short, specific title for the request. If the submitter explicitly states a task
+  name, use it verbatim rather than rewriting it. Otherwise you may tighten their phrasing, but
+  don't invent subject matter they didn't mention.
+- department: best guess from ${DEPARTMENTS.join(", ")} based on what the request is about, or the
+  exact department the submitter explicitly names. Leave empty string if genuinely unclear.
 - context: what happened / why it matters / why Alyssa needs to review it — pull this from
   whatever background the submitter gave, in their own substance (light cleanup for clarity is
   fine, don't add facts they didn't say)
@@ -29,7 +43,8 @@ Extract:
 - publishDate: YYYY-MM-DD if mentioned, else empty string
 - missingFields: which of taskName/department/context/decisionNeeded/assetsToReview/timeEstimate/
   dueDate you left empty or are genuinely unsure about, because the submitter didn't cover them.
-  Use the exact field names listed above.
+  Use the exact field names listed above. Never include submittedBy here — that field is always
+  optional to fill in manually.
 
 Do not fabricate specifics the submitter never said. An empty string plus a missingFields entry is
 always better than a guessed-at value that isn't grounded in what they actually described.
@@ -43,6 +58,7 @@ export const EXTRACTION_TOOL_SCHEMA = {
   input_schema: {
     type: "object",
     properties: {
+      submittedBy: { type: "string" },
       taskName: { type: "string" },
       department: { type: "string", enum: [...DEPARTMENTS, ""] },
       context: { type: "string" },
@@ -54,6 +70,7 @@ export const EXTRACTION_TOOL_SCHEMA = {
       missingFields: { type: "array", items: { type: "string" } },
     },
     required: [
+      "submittedBy",
       "taskName",
       "department",
       "context",

@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildExtractionSystemPrompt, EXTRACTION_TOOL_SCHEMA } from "./extractionPrompt";
 
 export interface ExtractedFields {
+  submittedBy: string;
   taskName: string;
   department: string;
   context: string;
@@ -42,6 +43,7 @@ export async function extractSubmissionFields(description: string): Promise<Extr
   const raw = toolUse.input as Record<string, unknown>;
 
   return {
+    submittedBy: String(raw.submittedBy ?? ""),
     taskName: String(raw.taskName ?? ""),
     department: String(raw.department ?? ""),
     context: String(raw.context ?? ""),

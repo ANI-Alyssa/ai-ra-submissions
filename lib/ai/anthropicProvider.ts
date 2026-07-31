@@ -55,8 +55,10 @@ export class AnthropicReviewProvider implements AIProvider {
 
     // The model proposes scores; the platform — not the model — owns the approval bar, so the
     // threshold stays configurable (env today, Admin Panel in a later phase) without a prompt edit.
+    // A missing Loom is deliberately NOT part of this gate — per direct feedback, requiring one
+    // made the process too rigid; it still shows up as a recommendation (loomRequiredButMissing),
+    // just not as a rejection reason. Re-add it here if that policy should tighten later.
     const approved =
-      !loomRequiredButMissing &&
       overallScore >= APPROVAL_THRESHOLD &&
       contextScore >= APPROVAL_THRESHOLD &&
       decisionScore >= APPROVAL_THRESHOLD &&

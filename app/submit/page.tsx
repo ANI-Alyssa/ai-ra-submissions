@@ -105,6 +105,7 @@ export default function SubmitPage() {
 
       setFields((prev) => ({
         ...prev,
+        submittedBy: data.submittedBy || prev.submittedBy,
         taskName: data.taskName || prev.taskName,
         department: (DEPARTMENTS as readonly string[]).includes(data.department)
           ? data.department

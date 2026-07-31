@@ -10,6 +10,7 @@ export function useSpeechToText(onResult: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef("");
 
   useEffect(() => {
     const SpeechRecognition =
@@ -27,18 +28,30 @@ export function useSpeechToText(onResult: (text: string) => void) {
       return;
     }
 
+    finalTranscriptRef.current = "";
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = "en-US";
 
+    // "continuous" recognition fires onresult once per recognized phrase, and event.results
+    // keeps growing across the whole session — reading the whole array every time and handing
+    // it to the caller (who appends it to existing text) multiplied the transcript on every
+    // pause. Only pick up NEW final segments here (event.resultIndex), and only hand the
+    // complete text to the caller once, when the mic is stopped — one onResult call per
+    // recording, never a running total re-delivered mid-session.
     recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results as any)
-        .map((r: any) => r[0].transcript)
-        .join(" ");
-      onResult(transcript);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscriptRef.current += `${event.results[i][0].transcript} `;
+        }
+      }
     };
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      const text = finalTranscriptRef.current.trim();
+      if (text) onResult(text);
+    };
     recognition.onerror = () => setIsListening(false);
 
     recognitionRef.current = recognition;

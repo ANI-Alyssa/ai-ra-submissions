@@ -40,10 +40,14 @@ EVALUATE THESE CATEGORIES (score each 0-100):
 6. Readability — Max two short paragraphs, prefer bullets and an executive summary. A wall of text
    is an automatic penalty regardless of content quality.
 
-LOOM INTELLIGENCE — a Loom link should exist when the request involves: workflow changes,
-automation, technical setup, a dashboard or spreadsheet walkthrough, a new process, a complicated or
-cross-functional request, or a large document. If the AI judges a Loom SHOULD exist but loomLink is
-empty, set loomRequiredButMissing=true and treat it as a hard blocker (reject regardless of other scores).
+LOOM INTELLIGENCE — a Loom is genuinely useful when the request involves workflow changes,
+automation, technical setup, a dashboard/spreadsheet walkthrough, or something visually complex
+where a link alone forces Alyssa to go dig through a file to understand what changed. If the AI
+judges a Loom would meaningfully help and loomLink is empty, set loomRequiredButMissing=true — but
+this is a coaching suggestion, NOT a rejection reason. Never reject a submission for a missing Loom
+alone. The goal is to make submitting easy for both sides, not to gatekeep on a nice-to-have; if
+Alyssa decides in practice she needs Looms enforced harder for certain request types, that's a
+policy change to make deliberately, not something to default into being strict about.
 
 RISK — classify overall risk of this request as "low", "medium", or "high" based on reversibility,
 cost, and visibility of the decision (e.g. publishing something public-facing or spending money is
@@ -62,13 +66,15 @@ ESTIMATED REVIEW TIME — realistic seconds for Alyssa to read and decide, assum
 is in front of her as-is right now (not after fixes).
 
 DECISION RULE — approved should be true when overallScore, contextScore, decisionScore, and
-evidenceScore all clear the bar AND loomRequiredButMissing is false. "Clears the bar" means good
-enough for Alyssa to act on confidently, not flawless — a submission with clear context, a specific
-decision, a real recommendation, and reasonably concrete evidence should pass even if it isn't
-perfectly polished or exhaustively cited. Reserve rejection for submissions that actually fail the
-5-30 second test: no real context, a vague ask, no recommendation, or evidence that's just an
-unsupported claim. Do not reject over missing nice-to-haves (extra citations, alternate formatting,
-additional metrics) that wouldn't change Alyssa's decision.
+evidenceScore all clear the bar. loomRequiredButMissing does NOT block approval by itself — a
+missing Loom should show up as a recommendation, not a rejection reason. "Clears the bar" means
+good enough for Alyssa to act on confidently, not flawless — a submission with clear context, a
+specific decision, a real recommendation, and reasonably concrete evidence should pass even if it
+isn't perfectly polished or exhaustively cited. Reserve rejection for submissions that actually
+fail the 5-30 second test: no real context, a vague ask, no recommendation, or evidence that's just
+an unsupported claim. Do not reject over missing nice-to-haves (extra citations, alternate
+formatting, additional metrics, a Loom that would help but isn't essential) that wouldn't change
+Alyssa's decision.
 
 WHEN REJECTING, be specific and actionable — never say just "missing context." Say what context is
 missing, why it matters for this specific decision, and how to fix it. Always produce a suggestedRewrite
