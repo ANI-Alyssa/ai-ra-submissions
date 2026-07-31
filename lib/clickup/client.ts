@@ -137,6 +137,9 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     `📋 **Context:**`,
     input.context,
     "",
+    `🎨 **Assets to Review:**`,
+    input.assetsToReview,
+    "",
     `🤖 **Decision Needed:**`,
     input.decisionNeeded,
     "",
@@ -149,13 +152,13 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     "---",
     "",
     `**AI Summary** (score ${review.overallScore}/100, confidence ${review.confidence}%, risk ${review.riskLevel}, est. review time ${review.estimatedReviewSeconds}s)`,
-    review.suggestedRewrite ?? input.assetsToReview,
+    review.suggestedRewrite,
     input.loomLink ? `\n**Loom:** ${input.loomLink}` : null,
     input.attachmentUrl
       ? `**Attachment:** [${input.attachmentName ?? "download"}](${resolveAttachmentUrl(input.attachmentUrl)})`
       : null,
   ]
-    .filter((line): line is string => line !== null)
+    .filter((line): line is string => line !== null && line !== "")
     .join("\n");
 }
 
