@@ -214,7 +214,10 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     review.suggestedRewrite,
     input.loomLink ? `\n**Loom:** ${input.loomLink}` : null,
   ]
-    .filter((line): line is string => line !== null && line !== "")
+    // Only null (from conditional ? : null branches) is filtered out — the "" entries are
+    // intentional blank-line separators between sections. A previous version of this filter
+    // stripped "" too, which silently collapsed every section gap into one solid block.
+    .filter((line): line is string => line !== null)
     .join("\n");
 }
 
