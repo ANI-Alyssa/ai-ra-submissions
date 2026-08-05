@@ -94,8 +94,10 @@ uploads).
   rewrite in Alyssa's preferred format, review tips (§11–12)
 - Full revision history stored per submission (`SubmissionVersion` + `AIReview` per version)
 - Auto ClickUp task creation on approval into the real "Mae Submissions" list, assigned to Mae,
-  status `submissions`, with Context/Decision Needed/Assets to Review/ANI Department populated as
-  real ClickUp custom fields (not just description text) (§13)
+  status `submissions`, with Context/Decision Needed/Assets to Review/Loom Link/ANI Department/
+  Submitted By all populated as real ClickUp custom fields (not just description text) — "Submitted
+  By" resolves the typed name to a real ClickUp account via a name→user-ID lookup and a dedicated
+  API call, since "users"-type fields can't be set through the generic custom fields array (§13)
 - Optional sync of approved submissions into Alyssa's existing "Tasks + Approvals" Google Sheet,
   via an Apps Script webhook (non-fatal — a Sheets hiccup never blocks an approval)
 

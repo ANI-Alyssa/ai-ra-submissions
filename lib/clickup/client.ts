@@ -57,13 +57,14 @@ export async function createClickUpTask(
   >;
 
   // Text/number/date fields are safe to send generically as {id, value}. "ANI Department" is a
-  // drop_down — it needs the option's UUID, not the label text — so it's resolved separately via
-  // resolveDepartmentField(). "Submitted By" is left description-only: it's a users field (needs
-  // a ClickUp user ID), and submitters don't necessarily have their own ClickUp account.
-  const customFields = Object.entries({
+  // drop_down (needs the option's UUID, not the label text) and "Submitted By" is a users field
+  // (needs a ClickUp user ID, not free text) — both resolved separately below since they need a
+  // lookup rather than a straight value pass-through.
+  const customFields: Array<{ id: string; value: unknown }> = Object.entries({
     Context: input.context,
     "Decision Needed": input.decisionNeeded,
     "Assets to Review": input.assetsToReview,
+    "Loom link (optional)": input.loomLink,
     "AI Score": review.overallScore,
     "AI Confidence": review.confidence,
     "Submission ID": submissionId,
@@ -105,7 +106,40 @@ export async function createClickUpTask(
   }
 
   const data = (await response.json()) as ClickUpCreateTaskResponse;
+
+  // "users"-type custom fields aren't settable through the generic custom_fields array on task
+  // create (ClickUp silently ignores it — confirmed empirically) — they need this dedicated
+  // endpoint. Non-fatal: the task already exists and the description already has the name, so a
+  // failure here shouldn't fail the whole approval.
+  const submittedByUserId = resolveSubmittedByUserId(input.submittedBy);
+  if (submittedByUserId) {
+    try {
+      await setUsersField(token, data.id, submittedByUserId);
+    } catch (err) {
+      console.warn("Failed to set ClickUp 'Submitted By' field (non-fatal):", err);
+    }
+  }
+
   return { dryRun: false, taskId: data.id, taskUrl: data.url };
+}
+
+async function setUsersField(token: string, taskId: string, userId: number): Promise<void> {
+  const fieldId = process.env.CLICKUP_SUBMITTED_BY_FIELD_ID;
+  if (!fieldId) return;
+
+  const response = await fetch(`https://api.clickup.com/api/v2/task/${taskId}/field/${fieldId}`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ value: { add: [userId], rem: [] } }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Setting 'Submitted By' field failed (${response.status}): ${body}`);
+  }
 }
 
 // Resolves our department enum to the "🏢 ANI Department" drop_down's option UUID on the real
@@ -123,6 +157,20 @@ function resolveDepartmentField(department: SubmissionInput["department"]): { id
   if (!optionId) return null;
 
   return { id: fieldId, value: optionId };
+}
+
+// Resolves a submitter's typed name to the "🧑🏽‍🦰 Submitted By" users field's ClickUp user ID,
+// matching case-insensitively on first name (submitters type free text, not a ClickUp mention) —
+// e.g. "Mae" or "mae silorio" both match the "mae" entry. Returns null (description text still
+// has the name) rather than guessing when there's no confident match, since assigning the wrong
+// person to a "users" field is worse than leaving it blank.
+function resolveSubmittedByUserId(submittedBy: string): number | null {
+  const userMap = JSON.parse(process.env.CLICKUP_SUBMITTER_USER_IDS || "{}") as Record<
+    string,
+    number
+  >;
+  const firstName = submittedBy.trim().split(/\s+/)[0]?.toLowerCase();
+  return (firstName ? userMap[firstName] : undefined) ?? null;
 }
 
 // Uploaded attachments are stored as local "/uploads/..." paths (see lib/upload.ts) — they need
