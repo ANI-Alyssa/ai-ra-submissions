@@ -10,7 +10,6 @@ export interface ExtractedFields {
   assetsToReview: string;
   timeEstimate: string;
   dueDate: string;
-  publishDate: string;
   missingFields: string[];
 }
 
@@ -51,7 +50,6 @@ export async function extractSubmissionFields(description: string): Promise<Extr
     assetsToReview: String(raw.assetsToReview ?? ""),
     timeEstimate: String(raw.timeEstimate ?? ""),
     dueDate: String(raw.dueDate ?? ""),
-    publishDate: String(raw.publishDate ?? ""),
     missingFields: (raw.missingFields as string[]) ?? [],
   };
 }

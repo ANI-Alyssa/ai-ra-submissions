@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ReviseForm } from "./ReviseForm";
@@ -87,9 +88,6 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-md sm:p-6">
           <h2 className="font-serif text-lg text-amber-900">Why this needs revision</h2>
           <FeedbackList title="Reasons" items={parseList(latestReview.reasons)} />
-          <FeedbackList title="Missing Information" items={parseList(latestReview.missingInformation)} />
-          <FeedbackList title="Recommendations" items={parseList(latestReview.recommendations)} />
-          <FeedbackList title="Review Tips" items={parseList(latestReview.reviewTips)} />
           {latestReview.suggestedRewrite && (
             <div>
               <h3 className="text-sm font-semibold text-amber-900">Suggested Rewrite</h3>
@@ -97,6 +95,18 @@ export default async function SubmissionPage({ params }: { params: { id: string 
                 <MarkdownLite text={latestReview.suggestedRewrite} />
               </div>
             </div>
+          )}
+          {(parseList(latestReview.missingInformation).length > 0 ||
+            parseList(latestReview.recommendations).length > 0 ||
+            parseList(latestReview.reviewTips).length > 0) && (
+            <details className="text-sm">
+              <summary className="cursor-pointer font-medium text-amber-900">More details</summary>
+              <div className="mt-3 space-y-4">
+                <FeedbackList title="Missing Information" items={parseList(latestReview.missingInformation)} />
+                <FeedbackList title="Recommendations" items={parseList(latestReview.recommendations)} />
+                <FeedbackList title="Review Tips" items={parseList(latestReview.reviewTips)} />
+              </div>
+            </details>
           )}
         </div>
       )}
@@ -134,6 +144,15 @@ export default async function SubmissionPage({ params }: { params: { id: string 
               .env.example.
             </p>
           )}
+          <div className="mt-4 border-t border-teal/20 pt-4">
+            <p className="text-sm text-navy/80">Have another request?</p>
+            <Link
+              href="/submit"
+              className="mt-2 inline-block rounded-sm bg-teal px-5 py-2.5 font-sans text-sm font-semibold uppercase tracking-wider text-white hover:bg-teal/90"
+            >
+              Submit Another Request
+            </Link>
+          </div>
         </div>
       )}
 

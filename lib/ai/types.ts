@@ -16,7 +16,6 @@ export interface SubmissionInput {
   context: string;
   assetsToReview: string;
   decisionNeeded: string;
-  publishDate: string | null;
   department: Department;
   loomLink: string | null;
   attachmentUrl: string | null;

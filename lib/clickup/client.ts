@@ -1,5 +1,17 @@
 import type { AIReviewResult, SubmissionInput } from "../ai/types";
 
+// The description previously showed the raw enum ("CONTENT", "EA_SUPPORT") instead of a readable
+// label — confusing to read and easy to mistake for garbled/duplicated text.
+const DEPARTMENT_LABELS: Record<SubmissionInput["department"], string> = {
+  MARKETING: "Marketing",
+  PODCAST: "Podcast",
+  OPERATIONS: "Operations",
+  TECH: "Tech",
+  PROGRAM: "Program",
+  CONTENT: "Content",
+  EA_SUPPORT: "EA Support",
+};
+
 export interface CreateTaskResult {
   dryRun: boolean;
   taskId: string | null;
@@ -52,7 +64,6 @@ export async function createClickUpTask(
     Context: input.context,
     "Decision Needed": input.decisionNeeded,
     "Assets to Review": input.assetsToReview,
-    "Publish Date": input.publishDate ? new Date(input.publishDate).getTime() : null,
     "AI Score": review.overallScore,
     "AI Confidence": review.confidence,
     "Submission ID": submissionId,
@@ -124,12 +135,10 @@ function resolveAttachmentUrl(attachmentUrl: string): string {
 }
 
 // Mirrors the header/emoji template Mae's team already uses when submitting tasks by hand
-// (🧑 Submitted By / 🤖 Decision Needed / 📅 Publish Date / 📖 ANI Department), so an
-// AI-approved submission lands looking like one of theirs — plus an AI Summary section appended
-// underneath as the one thing a hand-written submission wouldn't already have.
+// (🧑 Submitted By / 🤖 Decision Needed / 📖 ANI Department), so an AI-approved submission lands
+// looking like one of theirs — plus an AI Summary section appended underneath as the one thing a
+// hand-written submission wouldn't already have.
 function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): string {
-  const publishDate = input.publishDate ? input.publishDate.slice(0, 10) : "Not specified";
-
   return [
     `🧑 **Submitted By:**`,
     input.submittedBy,
@@ -143,11 +152,8 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     `🤖 **Decision Needed:**`,
     input.decisionNeeded,
     "",
-    `📅 **Publish Date:**`,
-    publishDate,
-    "",
     `📖 **ANI Department:**`,
-    input.department,
+    DEPARTMENT_LABELS[input.department],
     "",
     "---",
     "",

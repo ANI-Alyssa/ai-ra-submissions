@@ -15,12 +15,7 @@ const URGENT_WINDOW_DAYS = 3;
 // Mirrors the "Tasks + Approvals" tracker's own two visible priority values — this app doesn't
 // know their full priority scale, so it only ever picks between the two it can see in the sheet.
 function computePriority(input: SubmissionInput): "High" | "Normal" {
-  const now = Date.now();
-  const dueMs = new Date(input.dueDate).getTime();
-  const publishMs = input.publishDate ? new Date(input.publishDate).getTime() : null;
-  const soonestMs = publishMs ? Math.min(dueMs, publishMs) : dueMs;
-
-  const daysUntil = (soonestMs - now) / (24 * 60 * 60 * 1000);
+  const daysUntil = (new Date(input.dueDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000);
   return daysUntil <= URGENT_WINDOW_DAYS ? "High" : "Normal";
 }
 
@@ -74,7 +69,9 @@ export async function pushToTasksSheet(
       assetLink,
       loomLink: input.loomLink ?? "",
       projectStatus: "Ready for Alyssa",
-      publishDate: formatSheetDate(input.publishDate),
+      // The tracker's own column is still "Publish Date" — we no longer collect a separate
+      // publish date, so this reuses Due Date, the closest thing we have.
+      publishDate: formatSheetDate(input.dueDate),
       estimatedTime: input.timeEstimate,
       priority: computePriority(input),
       projectManager: "",

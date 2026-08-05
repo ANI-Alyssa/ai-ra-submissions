@@ -40,7 +40,6 @@ Extract:
 - timeEstimate: how long the submitter expects the review to take, if they said so (e.g. "15
   minutes", "an hour") — leave empty string if not mentioned
 - dueDate: YYYY-MM-DD if mentioned/inferable, else empty string
-- publishDate: YYYY-MM-DD if mentioned, else empty string
 - missingFields: which of taskName/department/context/decisionNeeded/assetsToReview/timeEstimate/
   dueDate you left empty or are genuinely unsure about, because the submitter didn't cover them.
   Use the exact field names listed above. Never include submittedBy here — that field is always
@@ -66,7 +65,6 @@ export const EXTRACTION_TOOL_SCHEMA = {
       assetsToReview: { type: "string" },
       timeEstimate: { type: "string" },
       dueDate: { type: "string" },
-      publishDate: { type: "string" },
       missingFields: { type: "array", items: { type: "string" } },
     },
     required: [
@@ -78,7 +76,6 @@ export const EXTRACTION_TOOL_SCHEMA = {
       "assetsToReview",
       "timeEstimate",
       "dueDate",
-      "publishDate",
       "missingFields",
     ],
   },

@@ -20,7 +20,6 @@ export const submissionInputSchema = z.object({
   context: z.string().min(1, "Required"),
   assetsToReview: z.string().min(1, "Required"),
   decisionNeeded: z.string().min(1, "Required"),
-  publishDate: z.preprocess(emptyToNull, z.string().nullable()),
   department: z.enum(DEPARTMENTS),
   loomLink: z.preprocess(emptyToNull, z.string().url().nullable()),
   // Set programmatically from the /api/uploads response (a local "/uploads/..." path), not

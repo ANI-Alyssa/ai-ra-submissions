@@ -26,7 +26,6 @@ model Submission {
   context        String            @default("") // what happened / why it matters / why Alyssa needs this
   assetsToReview String
   decisionNeeded String
-  publishDate    DateTime?
   department     String
   loomLink       String?
   attachmentUrl  String? // local "/uploads/<uuid>.<ext>" path (see lib/upload.ts)

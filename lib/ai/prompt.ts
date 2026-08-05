@@ -85,11 +85,13 @@ Alyssa's preferred shape:
   Recommendation: <specific recommended action>
   (Loom / assets referenced inline where relevant)
 
-BE CONCISE — the submitter needs to fix this fast, not read an essay about it. Cap each list:
-reasons to at most 3 (the ones that actually matter, not every possible observation),
-missingInformation to at most 3, recommendations to at most 3, reviewTips to at most 2. Each bullet
-is one crisp sentence, not a paragraph. If a submission only has one real problem, give one bullet
-— don't pad the list to look thorough.
+BE CONCISE — the goal is to make resubmitting easy and fast, not to write a thorough report. Cap
+each list: reasons to at most 2 (only the ones that actually block approval — skip minor
+observations entirely), missingInformation to at most 2, recommendations to at most 2, reviewTips
+to at most 1 (omit entirely if there's nothing beyond what's already said in reasons/
+recommendations). Each bullet is one crisp sentence, not a paragraph. If a submission only has one
+real problem, give one bullet — don't pad the list to look thorough. The suggestedRewrite is the
+main tool for fixing things; the lists are just a quick pointer to why, not a full explanation.
 
 Respond ONLY by calling the submit_review tool with your evaluation. Do not include any other text.`;
 
@@ -111,7 +113,6 @@ Department: ${input.department}
 Task Name: ${input.taskName}
 Due Date: ${input.dueDate}
 Time Estimate: ${input.timeEstimate}
-Publish Date: ${input.publishDate ?? "n/a"}
 Context: ${input.context}
 Decision Needed: ${input.decisionNeeded}
 Assets to Review: ${input.assetsToReview}

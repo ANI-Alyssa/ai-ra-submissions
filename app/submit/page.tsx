@@ -45,7 +45,6 @@ interface FieldsState {
   context: string;
   decisionNeeded: string;
   assetsToReview: string;
-  publishDate: string;
   loomLink: string;
   freeformNotes: string;
 }
@@ -59,7 +58,6 @@ const EMPTY_FIELDS: FieldsState = {
   context: "",
   decisionNeeded: "",
   assetsToReview: "",
-  publishDate: "",
   loomLink: "",
   freeformNotes: "",
 };
@@ -115,7 +113,6 @@ export default function SubmitPage() {
         assetsToReview: data.assetsToReview || prev.assetsToReview,
         timeEstimate: data.timeEstimate || prev.timeEstimate,
         dueDate: data.dueDate || prev.dueDate,
-        publishDate: data.publishDate || prev.publishDate,
       }));
       setMissingFields(data.missingFields ?? []);
     } catch (err) {
@@ -304,12 +301,6 @@ export default function SubmitPage() {
           }
         />
 
-        <Field
-          label="Publish Date"
-          type="date"
-          value={fields.publishDate}
-          onChange={(v) => setField("publishDate", v)}
-        />
         <Field
           label="Loom Link"
           type="url"

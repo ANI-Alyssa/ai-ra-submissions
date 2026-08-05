@@ -11,7 +11,6 @@ function toSubmissionInput(
     department: string;
     dueDate: Date;
     timeEstimate: string;
-    publishDate: Date | null;
   },
   version: {
     taskName: string;
@@ -30,7 +29,6 @@ function toSubmissionInput(
     department: base.department as SubmissionInput["department"],
     dueDate: base.dueDate.toISOString(),
     timeEstimate: base.timeEstimate,
-    publishDate: base.publishDate ? base.publishDate.toISOString() : null,
     taskName: version.taskName,
     context: version.context,
     assetsToReview: version.assetsToReview,
@@ -122,7 +120,6 @@ export async function createSubmission(data: SubmissionFormData) {
       context: data.context,
       assetsToReview: data.assetsToReview,
       decisionNeeded: data.decisionNeeded,
-      publishDate: data.publishDate ? new Date(data.publishDate) : null,
       department: data.department,
       loomLink: data.loomLink,
       attachmentUrl: data.attachmentUrl,
