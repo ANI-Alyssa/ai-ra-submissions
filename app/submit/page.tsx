@@ -73,9 +73,13 @@ export default function SubmitPage() {
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
   const [fields, setFields] = useState<FieldsState>(EMPTY_FIELDS);
+  // Fields the person has manually typed/selected into — "Fill Form with AI" should never
+  // clobber something they already entered themselves, only fill in what's still blank.
+  const [touchedFields, setTouchedFields] = useState<Set<keyof FieldsState>>(new Set());
 
   function setField<K extends keyof FieldsState>(name: K, value: FieldsState[K]) {
     setFields((prev) => ({ ...prev, [name]: value }));
+    setTouchedFields((prev) => new Set(prev).add(name));
   }
 
   function appendField(name: keyof FieldsState, transcript: string) {
@@ -83,6 +87,7 @@ export default function SubmitPage() {
       ...prev,
       [name]: prev[name] ? `${prev[name]} ${transcript}` : transcript,
     }));
+    setTouchedFields((prev) => new Set(prev).add(name));
   }
 
   async function handleExtract() {
@@ -103,18 +108,27 @@ export default function SubmitPage() {
 
       setFields((prev) => ({
         ...prev,
-        submittedBy: data.submittedBy || prev.submittedBy,
-        taskName: data.taskName || prev.taskName,
-        department: (DEPARTMENTS as readonly string[]).includes(data.department)
-          ? data.department
-          : prev.department,
-        context: data.context || prev.context,
-        decisionNeeded: data.decisionNeeded || prev.decisionNeeded,
-        assetsToReview: data.assetsToReview || prev.assetsToReview,
-        timeEstimate: data.timeEstimate || prev.timeEstimate,
-        dueDate: data.dueDate || prev.dueDate,
+        submittedBy: touchedFields.has("submittedBy") ? prev.submittedBy : data.submittedBy || prev.submittedBy,
+        taskName: touchedFields.has("taskName") ? prev.taskName : data.taskName || prev.taskName,
+        department:
+          touchedFields.has("department") || !(DEPARTMENTS as readonly string[]).includes(data.department)
+            ? prev.department
+            : data.department,
+        context: touchedFields.has("context") ? prev.context : data.context || prev.context,
+        decisionNeeded: touchedFields.has("decisionNeeded")
+          ? prev.decisionNeeded
+          : data.decisionNeeded || prev.decisionNeeded,
+        assetsToReview: touchedFields.has("assetsToReview")
+          ? prev.assetsToReview
+          : data.assetsToReview || prev.assetsToReview,
+        timeEstimate: touchedFields.has("timeEstimate")
+          ? prev.timeEstimate
+          : data.timeEstimate || prev.timeEstimate,
+        dueDate: touchedFields.has("dueDate") ? prev.dueDate : data.dueDate || prev.dueDate,
       }));
-      setMissingFields(data.missingFields ?? []);
+      // Don't flag a field as missing if the person already filled it in themselves — the AI
+      // extraction has no visibility into manual edits, only into the freeform description.
+      setMissingFields((data.missingFields ?? []).filter((f: string) => !touchedFields.has(f as keyof FieldsState)));
     } catch (err) {
       setExtractError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

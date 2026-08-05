@@ -185,7 +185,8 @@ function resolveAttachmentUrl(attachmentUrl: string): string {
 // Mirrors the header/emoji template Mae's team already uses when submitting tasks by hand
 // (🧑 Submitted By / 🤖 Decision Needed / 📖 ANI Department), so an AI-approved submission lands
 // looking like one of theirs — plus an AI Summary section appended underneath as the one thing a
-// hand-written submission wouldn't already have.
+// hand-written submission wouldn't already have. Attachment is folded into Assets to Review
+// (right after the link/notes) rather than left dangling near the bottom.
 function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): string {
   return [
     `🧑 **Submitted By:**`,
@@ -196,6 +197,9 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     "",
     `🎨 **Assets to Review:**`,
     input.assetsToReview,
+    input.attachmentUrl
+      ? `Attachment: [${input.attachmentName ?? "download"}](${resolveAttachmentUrl(input.attachmentUrl)})`
+      : null,
     "",
     `🤖 **Decision Needed:**`,
     input.decisionNeeded,
@@ -203,14 +207,12 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     `📖 **ANI Department:**`,
     DEPARTMENT_LABELS[input.department],
     "",
-    "---",
-    "",
+    // Not a literal "---" horizontal-rule line here on purpose — a text line immediately
+    // followed by one (even across a blank line, in ClickUp's markdown parser) gets misread as
+    // a setext heading, which is why "ANI Department"'s value was rendering as a giant heading.
     `**AI Summary** (score ${review.overallScore}/100, confidence ${review.confidence}%, risk ${review.riskLevel}, est. review time ${review.estimatedReviewSeconds}s)`,
     review.suggestedRewrite,
     input.loomLink ? `\n**Loom:** ${input.loomLink}` : null,
-    input.attachmentUrl
-      ? `**Attachment:** [${input.attachmentName ?? "download"}](${resolveAttachmentUrl(input.attachmentUrl)})`
-      : null,
   ]
     .filter((line): line is string => line !== null && line !== "")
     .join("\n");
