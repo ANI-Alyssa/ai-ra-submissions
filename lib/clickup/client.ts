@@ -211,7 +211,6 @@ function buildTaskDescription(input: SubmissionInput, review: AIReviewResult): s
     // followed by one (even across a blank line, in ClickUp's markdown parser) gets misread as
     // a setext heading, which is why "ANI Department"'s value was rendering as a giant heading.
     `**AI Summary** (score ${review.overallScore}/100, confidence ${review.confidence}%, risk ${review.riskLevel}, est. review time ${review.estimatedReviewSeconds}s)`,
-    review.suggestedRewrite,
     input.loomLink ? `\n**Loom:** ${input.loomLink}` : null,
   ]
     // Only null (from conditional ? : null branches) is filtered out — the "" entries are
