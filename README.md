@@ -72,11 +72,11 @@ uploads).
    copy-pasting needed.
 4. **Set the remaining env vars** (Project Settings → Environment Variables) — everything in
    `.env.example` except `DATABASE_URL`/`BLOB_READ_WRITE_TOKEN` (handled by the steps above):
-   `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_APPROVAL_THRESHOLD`, `APP_BASE_URL` (your Vercel deployment
-   URL, e.g. `https://ai-ra-submissions.vercel.app`), `CLICKUP_API_TOKEN`, `CLICKUP_LIST_ID`,
-   `CLICKUP_MAE_ASSIGNEE_ID`, `CLICKUP_CUSTOM_FIELD_MAP`, `CLICKUP_DEPARTMENT_FIELD_ID`,
-   `CLICKUP_DEPARTMENT_OPTIONS`, and (if using the Google Sheets sync) `GOOGLE_SHEETS_WEBHOOK_URL`
-   / `GOOGLE_SHEETS_SHARED_SECRET`.
+   `APP_PASSWORD`, `APP_PASSWORD_SECRET`, `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_APPROVAL_THRESHOLD`,
+   `APP_BASE_URL` (your Vercel deployment URL, e.g. `https://ai-ra-submissions.vercel.app`),
+   `CLICKUP_API_TOKEN`, `CLICKUP_LIST_ID`, `CLICKUP_MAE_ASSIGNEE_ID`, `CLICKUP_CUSTOM_FIELD_MAP`,
+   `CLICKUP_DEPARTMENT_FIELD_ID`, `CLICKUP_DEPARTMENT_OPTIONS`, and (if using the Google Sheets
+   sync) `GOOGLE_SHEETS_WEBHOOK_URL` / `GOOGLE_SHEETS_SHARED_SECRET`.
 5. **Run the first migration against the new database**: once `DATABASE_URL` is set, run
    `npx prisma migrate deploy` locally with that same `DATABASE_URL` in your environment (or via
    `vercel env pull` to grab it), to create the tables before the first real deploy hits them.
@@ -85,6 +85,8 @@ uploads).
 
 ## What's implemented (MVP)
 
+- Shared-password gate (`middleware.ts` + `/login`) — interim access control until real RBAC (§20)
+  lands; one team password, no per-user accounts
 - Submission form with all required/optional fields from the PRD (§7)
 - AI review engine scoring Context, Decision Clarity, Evidence, Recommendation, Organization,
   Readability, plus Risk, Confidence, and Estimated Review Time (§8–10)
@@ -112,8 +114,9 @@ top of the existing schema, not a rewrite:
 - **Weekly Intelligence Report** (§17) & **Submitter Scorecards** (§18) & **Org Dashboard** (§19)
 - **Admin Panel** (§20) — configurable Mae-stage toggle, threshold, departments, prompt
   versioning, all currently controlled via `.env` and `lib/ai/prompt.ts`
-- **Role-based access control** — there is currently no auth; anyone with the URL can submit or
-  view a submission by ID. Needed before this goes further than local/internal testing
+- **Role-based access control** — the shared password gates the whole app but doesn't distinguish
+  submitters from Mae/Alyssa; anyone who's logged in can still view any submission by ID. Real
+  per-user roles are needed before this goes further than internal team use
 - **AI Knowledge Base** (§21) — the review prompt is static today; learning from historical
   approvals is a future phase
 
